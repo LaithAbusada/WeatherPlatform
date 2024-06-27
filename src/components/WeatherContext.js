@@ -9,6 +9,8 @@ const WeatherProvider = ({ children }) => {
   const [forecast, setForecast] = useState([]);
   const [city, setCity] = useState("amman");
   const [inputCity, setInputCity] = useState("");
+  const [weatherError, setWeatherError] = useState("");
+  const [forecastError, setForecastError] = useState("");
   const API_Key = "27f3b214589df0db3ae4609c9a8171a8";
 
   function fetchWeatherData(city) {
@@ -19,29 +21,22 @@ const WeatherProvider = ({ children }) => {
       .get(url)
       .then((response) => {
         setData(response.data);
+        setWeatherError("");
       })
       .catch((error) => {
-        console.error("Error fetching data(weather):", error);
-        toast.info(
-          "This City doesn't exist, Please check your spelling or try another",
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
-          }
-        );
+        if (error.response) {
+          setWeatherError(error.response.status);
+        } else {
+          setWeatherError("Network Error");
+        }
       });
 
     axios
       .get(forecastUrl)
       .then((response) => {
-        var uniqueForecastDays = [];
-        const fiveDaysForecast = response.data.list.filter((forecast) => {
-          var forecastDate = new Date(forecast.dt_txt).getDate();
+        let uniqueForecastDays = [];
+        let fiveDaysForecast = response.data.list.filter((forecast) => {
+          let forecastDate = new Date(forecast.dt_txt).getDate();
           if (
             !uniqueForecastDays.some(
               (item) => new Date(item.dt_txt).getDate() === forecastDate
@@ -52,11 +47,17 @@ const WeatherProvider = ({ children }) => {
           }
           return false;
         });
-
+        console.log(fiveDaysForecast);
+        fiveDaysForecast = fiveDaysForecast.slice(1);
         setForecast(fiveDaysForecast);
+        setForecastError("");
       })
       .catch((error) => {
-        console.error("Error fetching data(forecast)", error);
+        if (error.response) {
+          setForecastError(error.response.status);
+        } else {
+          setForecastError("Network Error");
+        }
       });
   }
 
@@ -70,6 +71,8 @@ const WeatherProvider = ({ children }) => {
         data,
         forecast,
         inputCity,
+        forecastError,
+        weatherError,
         setInputCity,
         setCity,
       }}
